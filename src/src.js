@@ -59,8 +59,31 @@ new fabric.Image.fromURL(videoEl.attr('poster'), function(poster) {
 				objectCaching: false
 			});
 
+		let cProgress = new fabric.Rect({
+			left: group.left + 3.5 * rad
+			, top: group.top + group.height - 1.5 * rad
+			, visible: !paused
+			, width: video.width - 5 * rad
+			, height: rad / 2
+			, stroke: mainColor
+			, fill: null
+			, rx: 5
+			, ry: 5
+		});
+		let progress = new fabric.Rect({
+			left: group.left + 3.5 * rad
+			, top: group.top + group.height - 1.5 * rad
+			, visible: !paused
+			, width: 0
+			, height: rad / 2
+			, stroke: mainColor
+			, fill: mainColor
+			, rx: 5
+			, ry: 5
+		});
 		let request;
 		let render = function () {
+			progress.set('width', (videoEl[0].currentTime * cProgress.width) / videoEl[0].duration);
 			canvas.renderAll();
 			if (paused) {
 				cancelAnimationFrame(request);
@@ -99,6 +122,8 @@ new fabric.Image.fromURL(videoEl.attr('poster'), function(poster) {
 				if (paused) {
 					video.visible = true;
 					poster.visible = false;
+					progress.visible = true;
+					cProgress.visible = true;
 					video.getElement().play();
 					fabric.util.requestAnimFrame(render);
 				} else {
@@ -113,6 +138,8 @@ new fabric.Image.fromURL(videoEl.attr('poster'), function(poster) {
 		});
 
 		group.addWithUpdate(play);
+		group.addWithUpdate(progress);
+		group.addWithUpdate(cProgress);
 
 		canvas.add(group);
 		canvas.renderAll();
