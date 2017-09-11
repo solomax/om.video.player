@@ -1,21 +1,23 @@
+var WHITEBOARD = 'whiteBoard';
 var canvas = new fabric.Canvas('c');
+canvas.setZoom(.7);
 var Player = (function() {
 	let player = {}, mainColor = '#ff6600', rad = 20;
 	function filter(_o, props) {
 		return props.reduce((result, key) => { result[key] = _o[key]; return result; }, {});
 	}
 
-	player.create = function(canvas, _o) {
+	player.create = function(canvas, _o, _role) {
 		let vid = $('<video>').hide().attr('class', 'wb-video slide-' + canvas.slide).attr('id', 'wb-video-' + _o.uid)
 			.attr("width", _o.width).attr("height", _o.height)
 			.append($('<source>').attr('type', 'video/mp4').attr('src', _o._src));
-		$('body').append(vid);
+		$('#wb-tab-' + canvas.wbId).append(vid);
 		new fabric.Image.fromURL(_o._poster, function(poster) {
 			new fabric.Image(vid[0], {}, function (video) {
 				video.visible = false;
 				poster.width = _o.width;
 				poster.height = _o.height;
-				let paused = true;
+				let paused = true, playable = false;
 				let trg = new fabric.Triangle({
 					left: 2.7 * rad
 					, top: _o.height - 2.5 * rad
@@ -87,8 +89,10 @@ var Player = (function() {
 				};
 				cProgress.on({
 					'mousedown': function (evt) {
-						video.getElement().currentTime = (evt.e.offsetX - evt.target.aCoords.bl.x - cProgress.aCoords.bl.x)
-								* video.getElement().duration / cProgress.width;
+						let _ptr = canvas.getPointer(evt.e)
+							, ptr = canvas._normalizePointer(group, _ptr)
+							, l = (group.width / 2 + ptr.x) * canvas.getZoom() - cProgress.aCoords.bl.x;
+						video.getElement().currentTime = l * video.getElement().duration / cProgress.width;
 						updateProgress();
 					}
 				});
@@ -168,9 +172,9 @@ var Player = (function() {
 
 				group.on({
 					'mouseover': function() {
-						play.visible = true;
-						cProgress.visible = true;
-						progress.visible = true;
+						play.visible = playable;
+						cProgress.visible = playable;
+						progress.visible = playable;
 						canvas.renderAll();
 					}
 					, 'mouseout': function() {
@@ -180,6 +184,10 @@ var Player = (function() {
 						canvas.renderAll();
 					}
 				});
+				group.setPlayable = function(_r) {
+					playable = _r === WHITEBOARD;
+				};
+				group.setPlayable(_role);
 				canvas.add(group);
 				canvas.renderAll();
 				player.modify(group, _o);
@@ -208,4 +216,4 @@ Player.create(canvas, {
 	, uid: 'test-uid'
 	, _poster: '//peach.blender.org/wp-content/uploads/evil-frank.png?x11217'
 	, _src: '//www.quirksmode.org/html5/videos/big_buck_bunny.mp4'
-});
+}, WHITEBOARD);
